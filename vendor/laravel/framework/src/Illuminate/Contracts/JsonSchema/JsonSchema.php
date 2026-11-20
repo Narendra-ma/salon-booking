@@ -1,56 +1,59 @@
 <?php
 
-namespace Illuminate\JsonSchema;
+namespace Illuminate\Contracts\JsonSchema;
 
 use Closure;
-use Illuminate\JsonSchema\Types\Type;
 
-/**
- * @method static Types\ObjectType object(Closure|array<string, Types\Type> $properties = [])
- * @method static Types\IntegerType integer()
- * @method static Types\NumberType number()
- * @method static Types\StringType string()
- * @method static Types\BooleanType boolean()
- * @method static Types\ArrayType array()
- * @method static Types\UnionType union(array<int, string> $types)
- */
-class JsonSchema
+interface JsonSchema
 {
     /**
-     * The maximum number of schema fragments that may be expanded when deserializing or building rules.
+     * Create a new object schema instance.
+     *
+     * @param  (Closure(JsonSchema): array<string, \Illuminate\JsonSchema\Types\Type>)|array<string, \Illuminate\JsonSchema\Types\Type>  $properties
+     * @return \Illuminate\JsonSchema\Types\ObjectType
      */
-    public const MAX_NODES = 20000;
+    public function object(Closure|array $properties = []);
 
     /**
-     * Build a type from a raw array of the Laravel-supported JSON Schema subset.
+     * Create a new array property instance.
      *
-     * @param  array<string, mixed>  $schema
-     *
-     * @throws \InvalidArgumentException
+     * @return \Illuminate\JsonSchema\Types\ArrayType
      */
-    public static function fromArray(array $schema): Type
-    {
-        return Deserializer::deserialize($schema);
-    }
+    public function array();
 
     /**
-     * Get the Laravel validation rules for the properties of the given object schema.
+     * Create a new string property instance.
      *
-     * @param  \Illuminate\JsonSchema\Types\Type|array<string, mixed>  $schema
-     * @return array<string, array<int, mixed>>
-     *
-     * @throws \InvalidArgumentException
+     * @return \Illuminate\JsonSchema\Types\StringType
      */
-    public static function rules(Type|array $schema): array
-    {
-        return ValidationRules::for($schema);
-    }
+    public function string();
 
     /**
-     * Dynamically pass static methods to the schema instance.
+     * Create a new integer property instance.
+     *
+     * @return \Illuminate\JsonSchema\Types\IntegerType
      */
-    public static function __callStatic(string $name, mixed $arguments): Type
-    {
-        return (new JsonSchemaTypeFactory)->$name(...$arguments);
-    }
+    public function integer();
+
+    /**
+     * Create a new number property instance.
+     *
+     * @return \Illuminate\JsonSchema\Types\NumberType
+     */
+    public function number();
+
+    /**
+     * Create a new boolean property instance.
+     *
+     * @return \Illuminate\JsonSchema\Types\BooleanType
+     */
+    public function boolean();
+
+    /**
+     * Create a new multi-type union instance.
+     *
+     * @param  array<int, string>  $types
+     * @return \Illuminate\JsonSchema\Types\UnionType
+     */
+    public function union(array $types);
 }
