@@ -15,6 +15,9 @@ Route::get('/galeri', [PageController::class, 'gallery'])->name('gallery');
 Route::get('/kontak', [PageController::class, 'contact'])->name('contact');
 
 Route::get('/booking', [BookingController::class, 'create'])->name('booking.create');
+Route::get('/booking/slots', [BookingController::class, 'slots'])
+    ->middleware('throttle:60,1')
+    ->name('booking.slots');
 Route::post('/booking', [BookingController::class, 'store'])
     ->middleware('throttle:10,1')
     ->name('booking.store');

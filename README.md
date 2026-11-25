@@ -10,6 +10,7 @@ Stack: Laravel 12, PHP 8.2+, MySQL, Blade, Bootstrap 5 (CDN), Laravel Breeze (lo
 
 - Halaman publik: beranda, layanan dan harga, galeri, kontak dengan peta. Responsif untuk HP.
 - Booking: form dengan Form Request, nomor WhatsApp dinormalisasi, cek jadwal bentrok, status awal `menunggu`.
+- Indikator jam: setelah memilih tanggal dan layanan, jam yang sudah penuh (atau sudah lewat / melewati jam tutup) tampil nonaktif dengan label "Penuh" lewat endpoint `GET /booking/slots`. Validasi di server tetap berjalan.
 - Admin: login, dashboard, setujui/batalkan booking, CRUD layanan, tombol kirim konfirmasi WhatsApp.
 - Akses admin dibatasi middleware `admin` dan `BookingPolicy`.
 
@@ -52,7 +53,7 @@ Cara tes manual untuk booking:
 
 1. Buka `/booking`, pilih layanan, tanggal besok, jam 10:00, kirim. Harus muncul halaman terima kasih.
 2. Ulangi dengan data yang sama dua kali lagi. Semua berhasil karena ada 3 pegawai.
-3. Ulangi sekali lagi. Harus muncul pesan jadwal sudah penuh.
+3. Ulangi sekali lagi. Harus muncul pesan jadwal sudah penuh. Muat ulang `/booking`, pilih tanggal dan layanan yang sama: jam 10:00 harus tampil "Penuh".
 4. Login admin, batalkan salah satu booking, lalu booking jam yang sama lagi. Sekarang berhasil.
 5. Setujui booking di admin. Tombol **Kirim WA** muncul dan membuka WhatsApp dengan pesan konfirmasi.
 
@@ -91,3 +92,11 @@ Hosting diurus sendiri. Hal yang perlu diperhatikan:
 - [Alur Git](docs/git-workflow.md): branch, commit, pull request
 - [Hasil review kode](docs/code-review.md)
 - [Catatan belajar](docs/belajar.md)
+
+## Akses privat (opsional)
+
+Isi `ACCESS_TOKEN` di `.env` dengan string acak panjang. Situs hanya terbuka lewat link `https://domain-anda/?akses=TOKEN`, selain itu menampilkan 403. Kosongkan untuk publik. Jangan menaruh token di repo atau README.
+
+## Hosting tanpa SSH (misalnya InfinityFree)
+
+Di hosting tanpa SSH `php artisan` tidak bisa dijalankan, jadi: pasang dependensi produksi di laptop (`composer install --no-dev --optimize-autoloader`), impor skema database lewat phpMyAdmin, taruh isi `public/` di `htdocs/` dan sisanya di `htdocs/salon-app/` (dengan `.htaccess` yang menolak akses langsung), dan set `PUBLIC_DISK_IN_PUBLIC=true` agar unggahan galeri tidak butuh symlink.

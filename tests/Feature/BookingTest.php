@@ -169,4 +169,41 @@ class BookingTest extends TestCase
         $this->post(route('booking.store'), [])
             ->assertSessionHasErrors(['customer_name', 'customer_phone', 'service_id', 'booking_date', 'start_time']);
     }
+
+    public function test_endpoint_slots_menandai_jam_penuh(): void
+    {
+        $this->existingBooking();
+
+        $response = $this->getJson(route('booking.slots', [
+            'date' => '2026-11-19',
+            'service_id' => $this->service->id,
+        ]))->assertOk();
+
+        // Satu pegawai sibuk 10:00-11:00 untuk layanan 60 menit
+        $this->assertFalse($response->json('09:30'));
+        $this->assertFalse($response->json('10:00'));
+        $this->assertFalse($response->json('10:30'));
+        $this->assertTrue($response->json('11:00'));
+        $this->assertTrue($response->json('09:00'));
+    }
+
+    public function test_slots_masih_tersedia_kalau_ada_pegawai_lain(): void
+    {
+        $this->existingBooking();
+        Employee::factory()->create();
+
+        $this->getJson(route('booking.slots', [
+            'date' => '2026-11-19',
+            'service_id' => $this->service->id,
+        ]))->assertOk()->assertJsonPath('10:00', true);
+    }
+
+    public function test_slots_menolak_tanggal_lampau_dan_layanan_tidak_ada(): void
+    {
+        $this->getJson(route('booking.slots', ['date' => '2026-11-10', 'service_id' => $this->service->id]))
+            ->assertStatus(422);
+
+        $this->getJson(route('booking.slots', ['date' => '2026-11-19', 'service_id' => 9999]))
+            ->assertNotFound();
+    }
 }

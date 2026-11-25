@@ -28,6 +28,31 @@ class BookingService
         return $slots;
     }
 
+    // Status tiap jam untuk tanggal dan layanan tertentu: true kalau masih bisa dipesan.
+    // Aturannya sama dengan create(): jam sudah lewat, selesai setelah tutup, atau
+    // semua pegawai aktif sibuk di rentang itu berarti penuh.
+    public function availability(string $date, Service $service): array
+    {
+        $ids = Employee::active()->pluck('id');
+        $close = Carbon::parse("$date ".config('salon.close'));
+        $result = [];
+
+        foreach ($this->slots() as $slot) {
+            $start = Carbon::parse("$date $slot");
+            $end = $start->copy()->addMinutes($service->duration_minutes);
+
+            $busy = Booking::active()
+                ->overlapping($date, $start->format('H:i:s'), $end->format('H:i:s'))
+                ->whereIn('employee_id', $ids)
+                ->distinct()
+                ->count('employee_id');
+
+            $result[$slot] = $start->gt(now()) && $end->lte($close) && $busy < $ids->count();
+        }
+
+        return $result;
+    }
+
     public function create(array $data): Booking
     {
         $service = Service::active()->findOrFail($data['service_id']);

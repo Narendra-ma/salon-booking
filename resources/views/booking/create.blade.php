@@ -81,6 +81,7 @@
                                                 @endforeach
                                             </select>
                                             @error('start_time')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            <div id="slot-hint" class="form-text">Pilih tanggal dan layanan untuk melihat jam yang masih tersedia.</div>
                                         </div>
                                     </div>
 
@@ -99,3 +100,48 @@
         </div>
     </section>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            const dateEl = document.getElementById('booking_date');
+            const serviceEl = document.getElementById('service_id');
+            const timeEl = document.getElementById('start_time');
+            const hintEl = document.getElementById('slot-hint');
+            if (!dateEl || !serviceEl || !timeEl) return;
+
+            const url = @json(route('booking.slots'));
+
+            async function refreshSlots() {
+                if (!dateEl.value || !serviceEl.value) return;
+
+                try {
+                    const res = await fetch(`${url}?date=${encodeURIComponent(dateEl.value)}&service_id=${encodeURIComponent(serviceEl.value)}`,
+                        { headers: { 'Accept': 'application/json' } });
+                    if (!res.ok) return;
+                    const free = await res.json();
+                    let full = 0;
+
+                    [...timeEl.options].forEach(option => {
+                        if (!option.value) return;
+                        const ok = free[option.value] === true;
+                        option.disabled = !ok;
+                        option.textContent = option.value + ' WIB' + (ok ? '' : ' - Penuh');
+                        if (!ok) full++;
+                        if (!ok && option.selected) timeEl.value = '';
+                    });
+
+                    hintEl.textContent = full
+                        ? `${full} jam sudah penuh atau tidak bisa dipilih untuk layanan ini.`
+                        : 'Semua jam masih tersedia.';
+                } catch (e) {
+                    // Gagal memuat status jam: biarkan semua jam bisa dipilih, server tetap memvalidasi.
+                }
+            }
+
+            dateEl.addEventListener('change', refreshSlots);
+            serviceEl.addEventListener('change', refreshSlots);
+            refreshSlots();
+        })();
+    </script>
+@endpush
