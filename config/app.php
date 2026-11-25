@@ -15,6 +15,9 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    // Token akses privat. Kosong = situs publik. Isi string acak panjang untuk membatasi akses.
+    'access_token' => env('ACCESS_TOKEN'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

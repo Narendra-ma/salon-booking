@@ -40,7 +40,9 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            // Hosting tanpa SSH tidak bisa membuat symlink (storage:link). Set PUBLIC_DISK_IN_PUBLIC=true
+            // agar unggahan disimpan langsung di folder public/storage.
+            'root' => env('PUBLIC_DISK_IN_PUBLIC', false) ? public_path('storage') : storage_path('app/public'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,
